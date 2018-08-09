@@ -1,6 +1,7 @@
 package andriod.sys;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
@@ -15,11 +16,18 @@ import org.webrtc.SessionDescription;
 
 public class sysService extends Service implements SignallingClient.SignalingInterface{
 
+    Context context;
     PeerConnection localPeer;
     boolean gotUserMedia;
     Handler handler;
 
+    public sysService(Context applicationContext) {
+        super();
+        context = applicationContext;
+    }
 
+    public sysService() {
+    }
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -30,18 +38,26 @@ public class sysService extends Service implements SignallingClient.SignalingInt
 
     @Override
     public void onCreate() {
-
         super.onCreate();
-        Toast.makeText(getApplicationContext(),"on create", Toast.LENGTH_LONG).show();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
         handler = new Handler();
         SignallingClient.getInstance().init(this);
-        Toast.makeText(getApplicationContext(),"on start", Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(),"on start sysService", Toast.LENGTH_LONG).show();
         return Service.START_STICKY;
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        Intent broadcastIntent = new Intent("ac.in.ActivityRecognition.RestartSensor");
+        sendBroadcast(broadcastIntent);
+    }
+
 
     /**
      * This method will be called directly by the app when it is the initiator and has got the local media
