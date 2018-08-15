@@ -58,13 +58,15 @@ class SignallingClient {
         }
         if (instance.roomName == null) {
             //set the room name here
+
             instance.roomName = "1";
         }
         return instance;
     }
 
 
-    public void init(SignalingInterface signalingInterface) {
+    public void init(SignalingInterface signalingInterface , String roomName) {
+        this.roomName = roomName;
         this.callback = signalingInterface;
         try {
             SSLContext sslcontext = SSLContext.getInstance("TLS");

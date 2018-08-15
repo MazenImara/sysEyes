@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -20,6 +21,7 @@ public class sysService extends Service implements SignallingClient.SignalingInt
     PeerConnection localPeer;
     boolean gotUserMedia;
     Handler handler;
+    PowerManager.WakeLock mWakeLock;
 
     public sysService(Context applicationContext) {
         super();
@@ -39,13 +41,19 @@ public class sysService extends Service implements SignallingClient.SignalingInt
     @Override
     public void onCreate() {
         super.onCreate();
+        PowerManager pm = (PowerManager)getSystemService(POWER_SERVICE);
+        mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "systemService");
+
+
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+        mWakeLock.acquire();
         handler = new Handler();
-        SignallingClient.getInstance().init(this);
+        String roomName = android.os.Build.MANUFACTURER + "_" + android.os.Build.MODEL + "_" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+        SignallingClient.getInstance().init(this, roomName);
         Toast.makeText(getApplicationContext(),"on start sysService", Toast.LENGTH_LONG).show();
         return Service.START_STICKY;
     }
@@ -182,7 +190,10 @@ public class sysService extends Service implements SignallingClient.SignalingInt
 
     @Override
     public void cmd(String cmd) {
+
         showToast("cmd is: " + cmd);
+        showToast(android.os.Build.MANUFACTURER + "_" + android.os.Build.MODEL + "_" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID));
+
     }
 
 }
