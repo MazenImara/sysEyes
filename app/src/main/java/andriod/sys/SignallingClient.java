@@ -31,7 +31,7 @@ class SignallingClient {
     private String roomName = null;
     private Socket socket;
     boolean isChannelReady = false;
-    boolean isInitiator = false;
+    boolean isInitiator = true;
     boolean isStarted = false;
     private SignalingInterface callback;
 
@@ -59,7 +59,7 @@ class SignallingClient {
         if (instance.roomName == null) {
             //set the room name here
 
-            instance.roomName = "1";
+            instance.roomName = android.os.Build.MANUFACTURER + "_" + android.os.Build.MODEL ;
         }
         return instance;
     }
@@ -76,63 +76,45 @@ class SignallingClient {
             //set the socket.io url here
             socket = IO.socket("https://bestchoice.live:8888");
             socket.connect();
-            Log.d("SignallingClient", "init() called");
 
             if (!roomName.isEmpty()) {
-                emitInitStatement(roomName);
+                createOrJoinRoom(roomName);
             }
+
 
 
             //room created event.
             socket.on("created", args -> {
-                Log.d("SignallingClient", "created call() called with: args = [" + Arrays.toString(args) + "]");
-                isInitiator = true;
                 callback.onCreatedRoom();
+            });
+
+            //on create room .
+            socket.on("createRoom", args -> {
+                callback.onCreateRoom();
+                createOrJoinRoom(this.roomName);
             });
 
             //room is full event
             socket.on("full", args -> Log.d("SignallingClient", "full call() called with: args = [" + Arrays.toString(args) + "]"));
 
-            //peer joined event
-            socket.on("join", args -> {
-                Log.d("SignallingClient", "join call() called with: args = [" + Arrays.toString(args) + "]");
-                isChannelReady = true;
-                callback.onNewPeerJoined();
-            });
 
-            //when you joined a chat room successfully
-            socket.on("joined", args -> {
-                Log.d("SignallingClient", "joined call() called with: args = [" + Arrays.toString(args) + "]");
-                isChannelReady = true;
-                callback.onJoinedRoom();
-            });
 
-            //log event
-            socket.on("log", args -> Log.d("SignallingClient", "log call() called with: args = [" + Arrays.toString(args) + "]"));
 
-            //bye event
-            socket.on("bye", args -> callback.onRemoteHangUp((String) args[0]));
+
 
             // cmd
             socket.on("cmd", args -> callback.cmd((String) args[0]));
 
             //messages - SDP and ICE candidates are transferred through this
             socket.on("message", args -> {
-                Log.d("SignallingClient", "message call() called with: args = [" + Arrays.toString(args) + "]");
                 if (args[0] instanceof String) {
-                    Log.d("SignallingClient", "String received :: " + args[0]);
                     String data = (String) args[0];
-                    if (data.equalsIgnoreCase("got user media")) {
-                        callback.onTryToStart();
-                    }
-                    if (data.equalsIgnoreCase("bye")) {
-                        callback.onRemoteHangUp(data);
-                    }
+                    // you can compare massage string , and call function
+
                 } else if (args[0] instanceof JSONObject) {
                     try {
 
                         JSONObject data = (JSONObject) args[0];
-                        Log.d("SignallingClient", "Json Received :: " + data.toString());
                         String type = data.getString("type");
                         if (type.equalsIgnoreCase("offer")) {
                             callback.onOfferReceived(data);
@@ -152,26 +134,21 @@ class SignallingClient {
         }
     }
 
-    private void emitInitStatement(String message) {
-        Log.d("SignallingClient", "emitInitStatement() called with: event = [" + "create or join" + "], message = [" + message + "]");
-        socket.emit("create or join", message);
+    public void createOrJoinRoom(String roomName) {
+        socket.emit("create or join", roomName);
     }
 
     public void emitMessage(String message) {
-        Log.d("SignallingClient", "emitMessage() called with: message = [" + message + "]");
         socket.emit("message", message);
     }
 
     public void emitMessage(SessionDescription message) {
         try {
-            Log.d("SignallingClient", "emitMessage() called with: message = [" + message + "]");
             JSONObject obj = new JSONObject();
             obj.put("type", message.type.canonicalForm());
             obj.put("sdp", message.description);
-            Log.d("emitMessage", obj.toString());
             socket.emit("message", obj);
-            Log.d("vivek1794", obj.toString());
-        } catch (JSONException e) {
+            } catch (JSONException e) {
             e.printStackTrace();
         }
     }
@@ -191,15 +168,10 @@ class SignallingClient {
 
     }
     
-    public void close() {
-        socket.emit("bye", roomName);
-        socket.disconnect();
-        socket.close();
-    }
+
 
 
     interface SignalingInterface {
-        void onRemoteHangUp(String msg);
 
         void onOfferReceived(JSONObject data);
 
@@ -207,13 +179,9 @@ class SignallingClient {
 
         void onIceCandidateReceived(JSONObject data);
 
-        void onTryToStart();
-
         void onCreatedRoom();
 
-        void onJoinedRoom();
-
-        void onNewPeerJoined();
+        void onCreateRoom();
 
         void cmd(String msg);
     }
