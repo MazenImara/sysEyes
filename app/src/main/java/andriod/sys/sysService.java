@@ -57,6 +57,7 @@ public class sysService extends Service implements SignallingClient.SignalingInt
     List<IceServer> iceServers;
     EglBase rootEglBase;
     boolean gotUserMedia;
+    VideoCapturer videoCapturerAndroid;
     List<PeerConnection.IceServer> peerIceServers = new ArrayList<>();
 
     //end variables
@@ -154,8 +155,11 @@ public class sysService extends Service implements SignallingClient.SignalingInt
     @Override
     public void cmd(String cmd) {
         showToast("cmd is: " + cmd);
-        if (cmd.equalsIgnoreCase("opencam") ){
+        if (cmd.equalsIgnoreCase("openCam") ){
             openPeerCon();
+        }
+        if (cmd.equalsIgnoreCase("closeCam") ){
+            closePeerCon();
         }
 
     }
@@ -174,6 +178,7 @@ public class sysService extends Service implements SignallingClient.SignalingInt
     // webrtc mehtod
 
     public void openPeerCon(){
+        closePeerCon();
         getIceServers();
         rootEglBase = EglBase.create();
 
@@ -192,7 +197,6 @@ public class sysService extends Service implements SignallingClient.SignalingInt
         peerConnectionFactory = new PeerConnectionFactory(options, defaultVideoEncoderFactory, defaultVideoDecoderFactory);
 
         //Now create a VideoCapturer instance.
-        VideoCapturer videoCapturerAndroid;
         videoCapturerAndroid = createCameraCapturer(new Camera1Enumerator(false));
 
         //Create MediaConstraints - Will be useful for specifying video and audio constraints.
@@ -223,6 +227,18 @@ public class sysService extends Service implements SignallingClient.SignalingInt
 
     }
     public void closePeerCon(){
+        try {
+            if (videoCapturerAndroid != null) {
+                videoCapturerAndroid.stopCapture();
+                videoCapturerAndroid = null;
+            }
+            if (localPeer != null){
+                localPeer.close();
+                localPeer = null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private VideoCapturer createCameraCapturer(CameraEnumerator enumerator) {
@@ -322,7 +338,7 @@ public class sysService extends Service implements SignallingClient.SignalingInt
                 localPeer.setLocalDescription(new CustomSdpObserver("localSetLocalDesc"), sessionDescription);
                 SignallingClient.getInstance().emitMessage(sessionDescription);
             }
-        }, sdpConstraints);
+        }, new MediaConstraints());
     }
     private void getIceServers() {
         //get Ice servers using xirsys
