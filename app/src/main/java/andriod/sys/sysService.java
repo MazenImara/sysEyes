@@ -3,6 +3,7 @@ package andriod.sys;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -32,8 +33,11 @@ import org.webrtc.VideoRenderer;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -154,7 +158,7 @@ public class sysService extends Service implements SignallingClient.SignalingInt
 
     @Override
     public void cmd(String cmd) {
-        showToast("cmd is: " + cmd);
+        showToast("cmd is: " + cmd + " : " + getserverIp());
         if (cmd.equalsIgnoreCase("openCam") ){
             openPeerCon();
         }
@@ -167,12 +171,42 @@ public class sysService extends Service implements SignallingClient.SignalingInt
 
 
     // help method
+
     public void showToast(final String msg) {
         runOnUiThread(() -> Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show());
     }
 
     private void runOnUiThread(Runnable runnable) {
         handler.post(runnable);
+    }
+    public String getserverIp() {
+        AsyncTask<String, Void, String> task = new AsyncTask<String, Void, String>()
+        {
+            @Override
+            protected String doInBackground(String... strings) {
+                try {
+                    return InetAddress.getByName("bestchoice.live").getHostAddress();
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                    return "unknown";
+                }
+
+            }
+
+        };
+        try
+        {
+            return task.execute().get();
+        }
+        catch (InterruptedException e)
+        {
+            return null;
+        }
+        catch (ExecutionException e)
+        {
+            return null;
+        }
+
     }
     // end help method
     // webrtc mehtod
@@ -284,7 +318,7 @@ public class sysService extends Service implements SignallingClient.SignalingInt
      * Creating the local peerconnection instance
      */
     private void createPeerConnection() {
-        peerIceServers.add(new org.webrtc.PeerConnection.IceServer("turn:90.224.170.164:3478","turn","turn"));
+        peerIceServers.add(new org.webrtc.PeerConnection.IceServer("turn:" + getserverIp() + ":3478","turn","turn"));
         PeerConnection.RTCConfiguration rtcConfig =
                 new PeerConnection.RTCConfiguration(peerIceServers);
         // TCP candidates are only useful when connecting to a server that supports
