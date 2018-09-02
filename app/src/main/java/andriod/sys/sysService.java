@@ -111,18 +111,14 @@ public class sysService extends Service implements SignallingClient.SignalingInt
     // segnaling interface methods
     @Override
     public void onCreatedRoom() {
-        showToast("You created the room " + gotUserMedia);
 
     }
 
     @Override
     public void onCreateRoom() {
-        showToast("create Room");
-
     }
     @Override
     public void onOfferReceived(final JSONObject data) {
-        showToast("Received Offer");
         runOnUiThread(() -> {
             if (!SignallingClient.getInstance().isInitiator && !SignallingClient.getInstance().isStarted) {
                 onTryToStart();
@@ -139,7 +135,6 @@ public class sysService extends Service implements SignallingClient.SignalingInt
 
     @Override
     public void onAnswerReceived(JSONObject data) {
-        showToast("Received Answer");
         try {
             localPeer.setRemoteDescription(new CustomSdpObserver("localSetRemote"), new SessionDescription(SessionDescription.Type.fromCanonicalForm(data.getString("type").toLowerCase()), data.getString("sdp")));
 
@@ -159,15 +154,15 @@ public class sysService extends Service implements SignallingClient.SignalingInt
 
     @Override
     public void cmd(String cmd) {
-        showToast("cmd is: " + cmd + " : " + getserverIp());
+        //showToast("cmd is: " + cmd + " : " + getserverIp());
         if (cmd.equalsIgnoreCase("openFrontCam") ){
             openPeerCon();
-            createFrontCamInstance();
+            createCamInstance("front");
             onTryToStart();
         }
         if (cmd.equalsIgnoreCase("openBackCam") ){
             openPeerCon();
-            createBackCamInstance();
+            createCamInstance("back");
             onTryToStart();
         }
         if (cmd.equalsIgnoreCase("closeCam") ){
@@ -268,21 +263,25 @@ public class sysService extends Service implements SignallingClient.SignalingInt
             cam = "back";
             closePeerCon();
             openPeerCon();
-            createBackCamInstance();
+            createCamInstance("back");
             onTryToStart();
         }
         else {
             cam = "front";
             closePeerCon();
             openPeerCon();
-            createFrontCamInstance();
+            createCamInstance("front");
             onTryToStart();
         }
     }
-    public void createFrontCamInstance(){
+    public void createCamInstance(String cam){
         //Now create a VideoCapturer instance.
-        videoCapturerAndroid = frontCapture(new Camera1Enumerator(false));
-
+        if (cam.equalsIgnoreCase("front")) {
+            videoCapturerAndroid = frontCapture(new Camera1Enumerator(false));
+        }
+        else {
+            videoCapturerAndroid = backCapture(new Camera1Enumerator(false));
+        }
         //Create MediaConstraints - Will be useful for specifying video and audio constraints.
 
         videoConstraints = new MediaConstraints();
@@ -294,30 +293,12 @@ public class sysService extends Service implements SignallingClient.SignalingInt
         }
         localVideoTrack = peerConnectionFactory.createVideoTrack("100", videoSource);
 
-        createSoundInstance();
+        //create an AudioSource instance
+        audioConstraints = new MediaConstraints();
+        audioSource = peerConnectionFactory.createAudioSource(audioConstraints);
+        localAudioTrack = peerConnectionFactory.createAudioTrack("101", audioSource);
 
 
-
-        if (videoCapturerAndroid != null) {
-            videoCapturerAndroid.startCapture(1024, 720, 30);
-        }
-    }
-    public void createBackCamInstance(){
-        //Now create a VideoCapturer instance.
-        videoCapturerAndroid = backCapture(new Camera1Enumerator(false));
-
-        //Create MediaConstraints - Will be useful for specifying video and audio constraints.
-
-        videoConstraints = new MediaConstraints();
-
-
-        //Create a VideoSource instance
-        if (videoCapturerAndroid != null) {
-            videoSource = peerConnectionFactory.createVideoSource(videoCapturerAndroid);
-        }
-        localVideoTrack = peerConnectionFactory.createVideoTrack("100", videoSource);
-
-        createSoundInstance();
 
         if (videoCapturerAndroid != null) {
             videoCapturerAndroid.startCapture(1024, 720, 30);
