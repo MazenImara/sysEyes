@@ -170,7 +170,6 @@ public class sysService extends Service implements SignallingClient.SignalingInt
         }
         if (cmd.equalsIgnoreCase("switchCam") ){
             switchCam();
-            showToast(cam);
         }
         if (cmd.equalsIgnoreCase("openSound") ){
             openPeerCon();
@@ -183,11 +182,11 @@ public class sysService extends Service implements SignallingClient.SignalingInt
 
 
     // help method
-
-    public void showToast(final String msg) {
+/*
+    public void toast(final String msg) {
         runOnUiThread(() -> Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show());
     }
-
+*/
     private void runOnUiThread(Runnable runnable) {
         handler.post(runnable);
     }
@@ -403,7 +402,6 @@ public class sysService extends Service implements SignallingClient.SignalingInt
      * to remote peer
      */
     private void doCall() {
-        showToast("do call");
         localPeer.createOffer(new CustomSdpObserver("localCreateOffer") {
             @Override
             public void onCreateSuccess(SessionDescription sessionDescription) {
