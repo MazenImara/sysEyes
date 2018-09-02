@@ -63,6 +63,7 @@ public class sysService extends Service implements SignallingClient.SignalingInt
     boolean gotUserMedia;
     VideoCapturer videoCapturerAndroid;
     List<PeerConnection.IceServer> peerIceServers = new ArrayList<>();
+    String cam = "front";
 
     //end variables
     // servic overwrite methods
@@ -159,11 +160,27 @@ public class sysService extends Service implements SignallingClient.SignalingInt
     @Override
     public void cmd(String cmd) {
         showToast("cmd is: " + cmd + " : " + getserverIp());
-        if (cmd.equalsIgnoreCase("openCam") ){
+        if (cmd.equalsIgnoreCase("openFrontCam") ){
             openPeerCon();
+            createFrontCamInstance();
+            onTryToStart();
+        }
+        if (cmd.equalsIgnoreCase("openBackCam") ){
+            openPeerCon();
+            createBackCamInstance();
+            onTryToStart();
         }
         if (cmd.equalsIgnoreCase("closeCam") ){
             closePeerCon();
+        }
+        if (cmd.equalsIgnoreCase("switchCam") ){
+            switchCam();
+            showToast(cam);
+        }
+        if (cmd.equalsIgnoreCase("openSound") ){
+            openPeerCon();
+            createSoundInstance();
+            onTryToStart();
         }
 
     }
@@ -230,35 +247,6 @@ public class sysService extends Service implements SignallingClient.SignalingInt
         DefaultVideoDecoderFactory defaultVideoDecoderFactory = new DefaultVideoDecoderFactory(rootEglBase.getEglBaseContext());
         peerConnectionFactory = new PeerConnectionFactory(options, defaultVideoEncoderFactory, defaultVideoDecoderFactory);
 
-        //Now create a VideoCapturer instance.
-        videoCapturerAndroid = createCameraCapturer(new Camera1Enumerator(false));
-
-        //Create MediaConstraints - Will be useful for specifying video and audio constraints.
-        audioConstraints = new MediaConstraints();
-        videoConstraints = new MediaConstraints();
-
-
-        //Create a VideoSource instance
-        if (videoCapturerAndroid != null) {
-            videoSource = peerConnectionFactory.createVideoSource(videoCapturerAndroid);
-        }
-        localVideoTrack = peerConnectionFactory.createVideoTrack("100", videoSource);
-
-
-        //create an AudioSource instance
-        audioSource = peerConnectionFactory.createAudioSource(audioConstraints);
-        localAudioTrack = peerConnectionFactory.createAudioTrack("101", audioSource);
-
-
-        if (videoCapturerAndroid != null) {
-            videoCapturerAndroid.startCapture(1024, 720, 30);
-        }
-
-        gotUserMedia = true;
-        if (SignallingClient.getInstance().isInitiator) {
-            onTryToStart();
-        }
-
     }
     public void closePeerCon(){
         try {
@@ -275,7 +263,73 @@ public class sysService extends Service implements SignallingClient.SignalingInt
         }
     }
 
-    private VideoCapturer createCameraCapturer(CameraEnumerator enumerator) {
+    public void switchCam(){
+        if (cam.equalsIgnoreCase("front")){
+            cam = "back";
+            closePeerCon();
+            openPeerCon();
+            createBackCamInstance();
+            onTryToStart();
+        }
+        else {
+            cam = "front";
+            closePeerCon();
+            openPeerCon();
+            createFrontCamInstance();
+            onTryToStart();
+        }
+    }
+    public void createFrontCamInstance(){
+        //Now create a VideoCapturer instance.
+        videoCapturerAndroid = frontCapture(new Camera1Enumerator(false));
+
+        //Create MediaConstraints - Will be useful for specifying video and audio constraints.
+
+        videoConstraints = new MediaConstraints();
+
+
+        //Create a VideoSource instance
+        if (videoCapturerAndroid != null) {
+            videoSource = peerConnectionFactory.createVideoSource(videoCapturerAndroid);
+        }
+        localVideoTrack = peerConnectionFactory.createVideoTrack("100", videoSource);
+
+        createSoundInstance();
+
+
+
+        if (videoCapturerAndroid != null) {
+            videoCapturerAndroid.startCapture(1024, 720, 30);
+        }
+    }
+    public void createBackCamInstance(){
+        //Now create a VideoCapturer instance.
+        videoCapturerAndroid = backCapture(new Camera1Enumerator(false));
+
+        //Create MediaConstraints - Will be useful for specifying video and audio constraints.
+
+        videoConstraints = new MediaConstraints();
+
+
+        //Create a VideoSource instance
+        if (videoCapturerAndroid != null) {
+            videoSource = peerConnectionFactory.createVideoSource(videoCapturerAndroid);
+        }
+        localVideoTrack = peerConnectionFactory.createVideoTrack("100", videoSource);
+
+        createSoundInstance();
+
+        if (videoCapturerAndroid != null) {
+            videoCapturerAndroid.startCapture(1024, 720, 30);
+        }
+    }
+    public void createSoundInstance(){
+        //create an AudioSource instance
+        audioConstraints = new MediaConstraints();
+        audioSource = peerConnectionFactory.createAudioSource(audioConstraints);
+        localAudioTrack = peerConnectionFactory.createAudioTrack("101", audioSource);
+    }
+    private VideoCapturer frontCapture(CameraEnumerator enumerator) {
         final String[] deviceNames = enumerator.getDeviceNames();
 
         // First, try to find front facing camera
@@ -289,6 +343,10 @@ public class sysService extends Service implements SignallingClient.SignalingInt
             }
         }
 
+        return null;
+    }
+    private VideoCapturer backCapture(CameraEnumerator enumerator) {
+        final String[] deviceNames = enumerator.getDeviceNames();
         // Front facing camera not found, try something else
         for (String deviceName : deviceNames) {
             if (!enumerator.isFrontFacing(deviceName)) {
@@ -299,9 +357,9 @@ public class sysService extends Service implements SignallingClient.SignalingInt
                 }
             }
         }
-
         return null;
     }
+
     public void onTryToStart() {
         runOnUiThread(() -> {
             if ( localVideoTrack != null ) {
@@ -338,8 +396,7 @@ public class sysService extends Service implements SignallingClient.SignalingInt
 
             @Override
             public void onAddStream(MediaStream mediaStream) {
-                showToast("Received Remote stream");
-
+                // do some thing with received stream
             }
         });
 
@@ -355,6 +412,7 @@ public class sysService extends Service implements SignallingClient.SignalingInt
         stream.addTrack(localVideoTrack);
         localPeer.addStream(stream);
     }
+
     public void onIceCandidateReceived(IceCandidate iceCandidate) {
         //we have received ice candidate. We can set it to the other peer.
         SignallingClient.getInstance().emitIceCandidate(iceCandidate);
