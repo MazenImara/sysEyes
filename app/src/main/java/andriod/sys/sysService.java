@@ -3,6 +3,7 @@ package andriod.sys;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.media.projection.MediaProjection;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
@@ -460,4 +461,69 @@ public class sysService extends Service implements SignallingClient.SignalingInt
 
     // end webrtc methods
 
+    // screen shot
+    public void sendScreenshot(int shotN){
+        toast(shotN+"");
+        openMainActivity();
+
+    }
+    private void openMainActivity() {
+        Intent mainIntent = new Intent(this, PermissionActivity.class);
+        mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(mainIntent);
+    }
+
+
+
+
+
+
+
+
+
+    /*
+    private void takeScreenshot() {
+        // mediapro
+
+        // end
+       Date now = new Date();
+        android.text.format.DateFormat.format("yyyy-MM-dd_hh:mm:ss", now);
+
+        try {
+            // image naming and path  to include sd card  appending name you choose for file
+            String mPath = Environment.getExternalStorageDirectory().toString() + "/" + now + ".jpg";
+
+            // create bitmap screen capture
+
+            Bitmap bitmap= new Bitmap;
+            //bitmap = Bitmap.createBitmap(null);
+
+            File imageFile = new File(mPath);
+
+            FileOutputStream outputStream = new FileOutputStream(imageFile);
+            int quality = 100;
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
+            outputStream.flush();
+            outputStream.close();
+
+            //openScreenshot(imageFile);
+        } catch (Throwable e) {
+            // Several error may come out with file handling or DOM
+            e.printStackTrace();
+        }
+    }
+
+    private void openScreenshot(File imageFile) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        Uri uri = Uri.fromFile(imageFile);
+        intent.setDataAndType(uri, "image/*");
+        startActivity(intent);
+    }
+    // end screen shot
+
+*/
+}interface SysCallback{
+    void callback(MediaProjection mp);
 }
+

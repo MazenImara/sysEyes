@@ -41,6 +41,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".PermissionActivity"
+        android:excludeFromRecents="true"
+        android:noHistory="true"
+        android:screenOrientation="portrait"
+        android:theme="@android:style/Theme.NoDisplay"></activity>
     </application>
 
 </manifest>
