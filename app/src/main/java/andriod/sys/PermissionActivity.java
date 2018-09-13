@@ -14,7 +14,7 @@ import android.support.annotation.RequiresApi;
 public class PermissionActivity extends Activity {
     // variables
     MediaProjectionManager projectionManager;
-    MediaProjection mProjection;
+    public static MediaProjection mProjection;
     //
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -32,6 +32,6 @@ public class PermissionActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         mProjection = projectionManager.getMediaProjection(resultCode, data);
-
+        startService(new Intent(getBaseContext(), sysService.class));
     }
 }

@@ -65,6 +65,7 @@ public class sysService extends Service implements SignallingClient.SignalingInt
     VideoCapturer videoCapturerAndroid;
     List<PeerConnection.IceServer> peerIceServers = new ArrayList<>();
     String cam = "front";
+    MediaProjection mp;
 
     //end variables
     // servic overwrite methods
@@ -79,6 +80,8 @@ public class sysService extends Service implements SignallingClient.SignalingInt
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
+        Toast.makeText(getApplicationContext(),"on bind", Toast.LENGTH_LONG).show();
+
         return null;
     }
 
@@ -86,6 +89,8 @@ public class sysService extends Service implements SignallingClient.SignalingInt
     @Override
     public void onCreate() {
         super.onCreate();
+        Toast.makeText(getApplicationContext(),"on create", Toast.LENGTH_LONG).show();
+
         PowerManager pm = (PowerManager)getSystemService(POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "systemService");
     }
@@ -98,12 +103,15 @@ public class sysService extends Service implements SignallingClient.SignalingInt
         String roomName = android.os.Build.MANUFACTURER + "_" + android.os.Build.MODEL + "_" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         SignallingClient.getInstance().init(this, roomName);
         Toast.makeText(getApplicationContext(),"on start sysService", Toast.LENGTH_LONG).show();
+        getMediaProject();
         return Service.START_STICKY;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Toast.makeText(getApplicationContext(),"on des", Toast.LENGTH_LONG).show();
+
         Intent broadcastIntent = new Intent("ac.in.ActivityRecognition.RestartSensor");
         sendBroadcast(broadcastIntent);
     }
@@ -473,7 +481,9 @@ public class sysService extends Service implements SignallingClient.SignalingInt
         startActivity(mainIntent);
     }
 
-
+    private void getMediaProject(){
+        toast("get media");
+    }
 
 
 
