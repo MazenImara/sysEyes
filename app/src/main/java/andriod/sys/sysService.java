@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.projection.MediaProjection;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -66,6 +67,8 @@ public class sysService extends Service implements SignallingClient.SignalingInt
     List<PeerConnection.IceServer> peerIceServers = new ArrayList<>();
     String cam = "front";
     MediaProjection mp;
+    Intent perData;
+    int perResultCode;
 
     //end variables
     // servic overwrite methods
@@ -103,19 +106,25 @@ public class sysService extends Service implements SignallingClient.SignalingInt
         String roomName = android.os.Build.MANUFACTURER + "_" + android.os.Build.MODEL + "_" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         SignallingClient.getInstance().init(this, roomName);
         Toast.makeText(getApplicationContext(),"on start sysService", Toast.LENGTH_LONG).show();
-        getMediaProject();
+        Bundle bundle=intent.getExtras();
+        if (bundle != null){
+            gotPermission(bundle.getInt("perResultCode"), bundle.getParcelable("perData"));
+        }
         return Service.START_STICKY;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        SignallingClient.instance.socket.close();
-        SignallingClient.instance = null;
+        resetSocket();
         Toast.makeText(getApplicationContext(),"on des", Toast.LENGTH_LONG).show();
 
         Intent broadcastIntent = new Intent("ac.in.ActivityRecognition.RestartSensor");
         sendBroadcast(broadcastIntent);
+    }
+    public void resetSocket(){
+        SignallingClient.instance.socket.close();
+        SignallingClient.instance = null;
     }
     // end service overwrite methods
 
@@ -474,17 +483,25 @@ public class sysService extends Service implements SignallingClient.SignalingInt
     // screen shot
     public void sendScreenshot(int shotN){
         toast(shotN+"");
-        openMainActivity();
-
+        if (perData != null){
+            toast("from send screen");
+        }else {
+            getPermission();
+        }
     }
-    private void openMainActivity() {
+    private void getPermission() {
+        resetSocket();
         Intent mainIntent = new Intent(this, PermissionActivity.class);
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(mainIntent);
     }
 
-    private void getMediaProject(){
-        toast("get media");
+    private void gotPermission(int resultCode, Intent data){
+        if (data != null){
+            this.perData = data;
+            this.perResultCode = resultCode;
+            toast("get media");
+        }
     }
 
 

@@ -30,8 +30,9 @@ public class PermissionActivity extends Activity {
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        mProjection = projectionManager.getMediaProjection(resultCode, data);
-        startService(new Intent(getBaseContext(), sysService.class));
+        super.onActivityResult(requestCode, resultCode, data);Intent i = new Intent(this, sysService.class);
+        i.putExtra("perResultCode", resultCode);
+        i.putExtra("perData", data);
+        startService(i);
     }
 }
