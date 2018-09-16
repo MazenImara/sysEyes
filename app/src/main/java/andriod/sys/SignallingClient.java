@@ -27,10 +27,9 @@ import io.socket.client.Socket;
  */
 
 class SignallingClient {
-    private static SignallingClient instance;
+    public static SignallingClient instance;
     private String roomName = null;
-    private Socket socket;
-    boolean isChannelReady = false;
+    public Socket socket;
     boolean isInitiator = true;
     boolean isStarted = false;
     private SignalingInterface callback;

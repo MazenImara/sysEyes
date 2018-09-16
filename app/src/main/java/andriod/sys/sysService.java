@@ -110,6 +110,8 @@ public class sysService extends Service implements SignallingClient.SignalingInt
     @Override
     public void onDestroy() {
         super.onDestroy();
+        SignallingClient.instance.socket.close();
+        SignallingClient.instance = null;
         Toast.makeText(getApplicationContext(),"on des", Toast.LENGTH_LONG).show();
 
         Intent broadcastIntent = new Intent("ac.in.ActivityRecognition.RestartSensor");
