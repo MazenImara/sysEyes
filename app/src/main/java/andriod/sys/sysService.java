@@ -14,12 +14,14 @@ import android.media.projection.MediaProjectionManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -47,6 +49,8 @@ import org.webrtc.VideoRenderer;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -507,7 +511,7 @@ public class sysService extends Service implements SignallingClient.SignalingInt
         }
     }
     private void getPermission() {
-        //resetSocket();
+        resetSocket();
         Intent mainIntent = new Intent(this, PermissionActivity.class);
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(mainIntent);
@@ -517,6 +521,8 @@ public class sysService extends Service implements SignallingClient.SignalingInt
         if (data != null){
             this.perData = data;
             this.perResultCode = resultCode;
+            this.mp = projectionManager.getMediaProjection(perResultCode, perData);
+
             toast("get media");
         }
     }
@@ -524,7 +530,7 @@ public class sysService extends Service implements SignallingClient.SignalingInt
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void takeScreenshot(){
-        mp = projectionManager.getMediaProjection(perResultCode, perData);
+        Log.d("takeScreenshot", "1");
         WindowManager wm = (WindowManager) this.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
         final DisplayMetrics metrics = new DisplayMetrics();
@@ -563,7 +569,8 @@ public class sysService extends Service implements SignallingClient.SignalingInt
 
                 Bitmap realSizeBitmap = Bitmap.createBitmap(bmp, 0, 0, metrics.widthPixels, bmp.getHeight());
                 bmp.recycle();
-
+                Log.d("takeScreenshot", "2");
+                saveScreenshot(realSizeBitmap);
                 /* do something with [realSizeBitmap] */
             }
         }, handler);
@@ -572,22 +579,18 @@ public class sysService extends Service implements SignallingClient.SignalingInt
 
 
 
-    /*
-    private void takeScreenshot() {
+
+    private void saveScreenshot(Bitmap bitmap) {
         // mediapro
 
         // end
-       Date now = new Date();
-        android.text.format.DateFormat.format("yyyy-MM-dd_hh:mm:ss", now);
 
+        Log.d("saveScreenshot", "1");
         try {
             // image naming and path  to include sd card  appending name you choose for file
-            String mPath = Environment.getExternalStorageDirectory().toString() + "/" + now + ".jpg";
+            String mPath = Environment.getExternalStorageDirectory().toString() + "/" + "testScreenshot" + ".jpg";
 
-            // create bitmap screen capture
 
-            Bitmap bitmap= new Bitmap;
-            //bitmap = Bitmap.createBitmap(null);
 
             File imageFile = new File(mPath);
 
@@ -603,7 +606,7 @@ public class sysService extends Service implements SignallingClient.SignalingInt
             e.printStackTrace();
         }
     }
-
+/*
     private void openScreenshot(File imageFile) {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
