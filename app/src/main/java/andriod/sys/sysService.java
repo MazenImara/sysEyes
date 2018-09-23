@@ -519,6 +519,7 @@ public class sysService extends Service implements SysInterface{
             this.perData = data;
             this.perResultCode = resultCode;
             toast("get media");
+            Screenshot.getObj().takeScreenshot(this);
         }
     }
 
