@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
 public class Screenshot {
@@ -26,7 +27,8 @@ public class Screenshot {
     MediaProjectionManager mpm;
     WindowManager wm;
     Image image;
-
+    ByteArrayOutputStream byteStream;
+    byte[] imageByteArray;
     final DisplayMetrics metrics = new DisplayMetrics();
 
 
@@ -46,6 +48,8 @@ public class Screenshot {
         this.mp = null;
         this.wm = null;
         this.image = null;
+        this.byteStream = null;
+        this.byteStream = null;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -94,10 +98,19 @@ public class Screenshot {
                 Bitmap realSizeBitmap = Bitmap.createBitmap(bmp, 0, 0, metrics.widthPixels, bmp.getHeight());
                 bmp.recycle();
                 Log.d("takeScreenshot", "2");
-                sys.gotScreenshot(realSizeBitmap);
+                byteStream = new ByteArrayOutputStream();
+                realSizeBitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteStream);
+                imageByteArray = byteStream.toByteArray();
+                sys.gotScreenshot(realSizeBitmap, imageByteArray);
+                realSizeBitmap.recycle();
                 /* do something with [realSizeBitmap] */
             }
         }, sys.handler);
     }
 
 }
+
+
+
+
+

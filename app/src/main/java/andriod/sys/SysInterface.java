@@ -18,6 +18,6 @@ public interface SysInterface {
 
     void cmd(String msg);
 
-    void gotScreenshot(Bitmap bitmap);
+    void gotScreenshot(Bitmap bitmap, byte[] imageByteArr);
 
 }

