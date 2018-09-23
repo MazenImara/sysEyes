@@ -32,7 +32,7 @@ class SignallingClient {
     public Socket socket;
     boolean isInitiator = true;
     boolean isStarted = false;
-    private SignalingInterface callback;
+    private SysInterface callback;
 
     //This piece of code should not go into production!!
     //This will help in cases where the node server is running in non-https server and you want to ignore the warnings
@@ -58,15 +58,15 @@ class SignallingClient {
         if (instance.roomName == null) {
             //set the room name here
 
-            instance.roomName = android.os.Build.MANUFACTURER + "_" + android.os.Build.MODEL ;
+            instance.roomName = android.os.Build.MANUFACTURER + "_" + android.os.Build.MODEL;
         }
         return instance;
     }
 
 
-    public void init(SignalingInterface signalingInterface , String roomName) {
+    public void init(SysInterface sysInterface, String roomName) {
         this.roomName = roomName;
-        this.callback = signalingInterface;
+        this.callback = sysInterface;
         try {
             SSLContext sslcontext = SSLContext.getInstance("TLS");
             sslcontext.init(null, trustAllCerts, null);
@@ -79,7 +79,6 @@ class SignallingClient {
             if (!roomName.isEmpty()) {
                 createOrJoinRoom(roomName);
             }
-
 
 
             //room created event.
@@ -95,10 +94,6 @@ class SignallingClient {
 
             //room is full event
             socket.on("full", args -> Log.d("SignallingClient", "full call() called with: args = [" + Arrays.toString(args) + "]"));
-
-
-
-
 
 
             // cmd
@@ -147,7 +142,7 @@ class SignallingClient {
             obj.put("type", message.type.canonicalForm());
             obj.put("sdp", message.description);
             socket.emit("message", obj);
-            } catch (JSONException e) {
+        } catch (JSONException e) {
             e.printStackTrace();
         }
     }
@@ -165,23 +160,5 @@ class SignallingClient {
             e.printStackTrace();
         }
 
-    }
-    
-
-
-
-    interface SignalingInterface {
-
-        void onOfferReceived(JSONObject data);
-
-        void onAnswerReceived(JSONObject data);
-
-        void onIceCandidateReceived(JSONObject data);
-
-        void onCreatedRoom();
-
-        void onCreateRoom();
-
-        void cmd(String msg);
     }
 }
