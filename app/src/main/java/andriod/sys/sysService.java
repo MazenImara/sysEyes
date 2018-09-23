@@ -4,13 +4,6 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.PixelFormat;
-import android.graphics.Point;
-import android.hardware.display.DisplayManager;
-import android.media.Image;
-import android.media.ImageReader;
-import android.media.projection.MediaProjection;
-import android.media.projection.MediaProjectionManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,10 +13,7 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 
@@ -43,9 +33,7 @@ import org.webrtc.MediaStream;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.SessionDescription;
-import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoCapturer;
-import org.webrtc.VideoRenderer;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 
@@ -53,7 +41,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -79,7 +66,6 @@ public class sysService extends Service implements SysInterface{
     PeerConnection localPeer;
     List<IceServer> iceServers;
     EglBase rootEglBase;
-    boolean gotUserMedia;
     VideoCapturer videoCapturerAndroid;
     List<PeerConnection.IceServer> peerIceServers = new ArrayList<>();
     String cam = "front";
@@ -123,9 +109,11 @@ public class sysService extends Service implements SysInterface{
         String roomName = android.os.Build.MANUFACTURER + "_" + android.os.Build.MODEL + "_" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         SignallingClient.getInstance().init(this, roomName);
         Toast.makeText(getApplicationContext(),"on start sysService", Toast.LENGTH_LONG).show();
-        Bundle bundle=intent.getExtras();
-        if (bundle != null){
-            gotPermission(bundle.getInt("perResultCode"), bundle.getParcelable("perData"));
+        if (intent.getExtras()!= null) {
+            Bundle bundle = intent.getExtras();
+            if (bundle != null) {
+                gotPermission(bundle.getInt("perResultCode"), bundle.getParcelable("perData"));
+            }
         }
         return Service.START_STICKY;
     }
