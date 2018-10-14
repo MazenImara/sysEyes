@@ -153,6 +153,7 @@ public class sysService extends Service implements SysInterface{
     }
     @Override
     public void onOfferReceived(final JSONObject data) {
+        toast("off re");
         runOnUiThread(() -> {
             if (!SignallingClient.getInstance().isInitiator && !SignallingClient.getInstance().isStarted) {
                 onTryToStart();
@@ -169,6 +170,8 @@ public class sysService extends Service implements SysInterface{
 
     @Override
     public void onAnswerReceived(JSONObject data) {
+        toast("ans reciv3d");
+
         try {
             localPeer.setRemoteDescription(new CustomSdpObserver("localSetRemote"), new SessionDescription(SessionDescription.Type.fromCanonicalForm(data.getString("type").toLowerCase()), data.getString("sdp")));
 
@@ -536,6 +539,11 @@ public class sysService extends Service implements SysInterface{
 
     // webrtc datachannel
     private void initDataChannel() {
+        PeerConnectionFactory.initialize(
+                PeerConnectionFactory.InitializationOptions.builder(this)
+                        .setEnableInternalTracer(BuildConfig.DEBUG)
+                        .createInitializationOptions()
+        );
         peerConnectionFactory = new PeerConnectionFactory(null);
         createPeerConnection("data");
 
@@ -563,6 +571,7 @@ public class sysService extends Service implements SysInterface{
                 // Only outcoming messages used in this example
             }
         });
+        doCall();
     }
 
     private void sendImage(byte[] bytes) {
