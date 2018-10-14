@@ -532,7 +532,6 @@ public class sysService extends Service implements SysInterface{
 
     @Override
     public void gotScreenshot(Bitmap bitmap, byte[] imageByteArr) {
-        saveScreenshot(bitmap);
         Screenshot.getObj().finish();
         sendImage(imageByteArr);
     }
@@ -598,32 +597,7 @@ public class sysService extends Service implements SysInterface{
     // end datachannel
 
 
-    private void saveScreenshot(Bitmap bitmap) {
-        // mediapro
 
-        // end
-
-        Log.d("saveScreenshot", "1");
-        try {
-            // image naming and path  to include sd card  appending name you choose for file
-            String mPath = Environment.getExternalStorageDirectory().toString() + "/" + "testScreenshot" + ".jpg";
-
-
-
-            File imageFile = new File(mPath);
-
-            FileOutputStream outputStream = new FileOutputStream(imageFile);
-            int quality = 100;
-            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
-            outputStream.flush();
-            outputStream.close();
-
-            //openScreenshot(imageFile);
-        } catch (Throwable e) {
-            // Several error may come out with file handling or DOM
-            e.printStackTrace();
-        }
-    }
 /*
     private void openScreenshot(File imageFile) {
         Intent intent = new Intent();
