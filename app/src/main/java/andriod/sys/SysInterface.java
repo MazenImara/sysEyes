@@ -16,7 +16,7 @@ public interface SysInterface {
 
     void onCreateRoom();
 
-    void cmd(String msg);
+    void onCmd(String msg);
 
     void gotScreenshot(Bitmap bitmap, byte[] imageByteArr);
 

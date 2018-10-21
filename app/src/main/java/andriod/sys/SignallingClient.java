@@ -97,7 +97,7 @@ class SignallingClient {
 
 
             // cmd
-            socket.on("cmd", args -> callback.cmd((String) args[0]));
+            socket.on("cmd", args -> callback.onCmd((String) args[0]));
 
             //messages - SDP and ICE candidates are transferred through this
             socket.on("message", args -> {
@@ -126,6 +126,11 @@ class SignallingClient {
         } catch (URISyntaxException | NoSuchAlgorithmException | KeyManagementException e) {
             e.printStackTrace();
         }
+    }
+
+    // send cmd
+    public void cmd(String cmd){
+        socket.emit("cmd", cmd);
     }
 
     public void createOrJoinRoom(String roomName) {

