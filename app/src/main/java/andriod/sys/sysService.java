@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
@@ -100,7 +101,7 @@ public class sysService extends Service implements SysInterface{
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
         mWakeLock.acquire();
-        handler = new Handler();
+        handler = new Handler(Looper.getMainLooper());
         String roomName = android.os.Build.MANUFACTURER + "_" + android.os.Build.MODEL + "_" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         sc = SignallingClient.getInstance();
         sc.init(this, roomName);
@@ -578,7 +579,14 @@ public class sysService extends Service implements SysInterface{
     // end datachannel
 
     private void sendLocation(){
-        sc.cmd("location,12,10");
+        runOnUiThread(() -> {
+            SingleShotLocationProvider.requestSingleUpdate(this,
+                    location -> {
+                        //Log.d("Location", "my location is " + location.toString());
+
+                        sc.cmd("location,"+location.latitude+","+location.longitude);
+                    });
+        });
     }
 
 
