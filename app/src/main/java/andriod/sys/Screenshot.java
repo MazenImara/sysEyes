@@ -43,9 +43,11 @@ public class Screenshot {
         if (obj != null) {
             obj = null;
         }
+        if (this.mp != null){
+            this.mp.stop();
+            this.mp = null;
+        }
         this.mpm = null;
-        mp.stop();
-        this.mp = null;
         this.wm = null;
         this.image = null;
         this.byteStream = null;
