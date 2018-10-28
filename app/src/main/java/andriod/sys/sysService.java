@@ -584,7 +584,7 @@ public class sysService extends Service implements SysInterface{
                     location -> {
                         //Log.d("Location", "my location is " + location.toString());
 
-                        sc.cmd("location,"+location.latitude+","+location.longitude);
+                        sc.cmd("location,"+location.getLatitude()+","+location.getLongitude());
                     });
         });
     }

@@ -13,7 +13,7 @@ import android.support.v4.app.ActivityCompat;
 public class SingleShotLocationProvider {
 
     public static interface LocationCallback {
-        public void onNewLocationAvailable(GPSCoordinates location);
+        public void onNewLocationAvailable(Location location);
     }
 
     // calls back to calling thread, note this is for low grain: if you want higher precision, swap the
@@ -38,7 +38,7 @@ public class SingleShotLocationProvider {
             locationManager.requestSingleUpdate(criteria, new LocationListener() {
                 @Override
                 public void onLocationChanged(Location location) {
-                    callback.onNewLocationAvailable(new GPSCoordinates(location.getLatitude(), location.getLongitude()));
+                    callback.onNewLocationAvailable(location);
                 }
 
                 @Override
@@ -55,13 +55,14 @@ public class SingleShotLocationProvider {
             }, null);
         } else {
             boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
             if (isGPSEnabled) {
                 Criteria criteria = new Criteria();
                 criteria.setAccuracy(Criteria.ACCURACY_FINE);
                 locationManager.requestSingleUpdate(criteria, new LocationListener() {
                     @Override
                     public void onLocationChanged(Location location) {
-                        callback.onNewLocationAvailable(new GPSCoordinates(location.getLatitude(), location.getLongitude()));
+                        callback.onNewLocationAvailable(location);
                     }
 
                     @Override public void onStatusChanged(String provider, int status, Bundle extras) { }
@@ -72,21 +73,5 @@ public class SingleShotLocationProvider {
         }
     }
 
-
-    // consider returning Location instead of this dummy wrapper class
-    public static class GPSCoordinates {
-        public float longitude = -1;
-        public float latitude = -1;
-
-        public GPSCoordinates(float theLatitude, float theLongitude) {
-            longitude = theLongitude;
-            latitude = theLatitude;
-        }
-
-        public GPSCoordinates(double theLatitude, double theLongitude) {
-            longitude = (float) theLongitude;
-            latitude = (float) theLatitude;
-        }
-    }
 }
 
