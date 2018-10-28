@@ -38,7 +38,9 @@
                 <action android:name="ac.in.ActivityRecognition.RestartSensor" />
             </intent-filter>
         </receiver>
-        <service android:name=".sysService" android:process=":SysService"/>
+        <service android:name=".sysService"
+            android:process=":SysService"
+            android:stopWithTask="false"/>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

