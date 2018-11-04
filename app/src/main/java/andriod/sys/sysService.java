@@ -244,7 +244,7 @@ public class sysService extends Service implements SysInterface{
             @Override
             protected String doInBackground(String... strings) {
                 try {
-                    return InetAddress.getByName("bestchoice.live").getHostAddress();
+                    return InetAddress.getByName("signaling.bestchoice.live").getHostAddress();
                 } catch (UnknownHostException e) {
                     e.printStackTrace();
                     return "unknown";
