@@ -124,6 +124,7 @@ public class sysService extends Service implements SysInterface{
     @Override
     public void onDestroy() {
         super.onDestroy();
+        closePeerCon();
         resetSocket();
         Intent broadcastIntent = new Intent("android.sys.StartReceiver");
         sendBroadcast(broadcastIntent);
@@ -538,38 +539,9 @@ public class sysService extends Service implements SysInterface{
 
     // webrtc datachannel
     private void initDataChannel() {
-        PeerConnectionFactory.initialize(
-                PeerConnectionFactory.InitializationOptions.builder(this)
-                        .setEnableInternalTracer(BuildConfig.DEBUG)
-                        .createInitializationOptions()
-        );
-        peerConnectionFactory = new PeerConnectionFactory(null);
-
         createPeerConnection("data");
         localDataChannel = localPeer.createDataChannel("sendDataChannel", new DataChannel.Init());
-        localDataChannel.registerObserver(new DataChannel.Observer() {
-            @Override
-            public void onBufferedAmountChange(long l) {
 
-            }
-
-            @Override
-            public void onStateChange() {
-                runOnUiThread(() -> {
-                    if (localDataChannel.state() == DataChannel.State.OPEN) {
-                        //binding.sendButton.setEnabled(true);
-                    } else {
-                        //binding.sendButton.setEnabled(false);
-                    }
-                });
-            }
-
-            @Override
-            public void onMessage(DataChannel.Buffer buffer) {
-                // Incoming messages, ignore
-                // Only outcoming messages used in this example
-            }
-        });
         doCall();
     }
 
