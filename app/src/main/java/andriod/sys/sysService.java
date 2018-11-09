@@ -134,7 +134,7 @@ public class sysService extends Service implements SysInterface{
     public void onTaskRemoved(Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
         resetSocket();
-        Intent broadcastIntent = new Intent("ac.in.ActivityRecognition.RestartSensor");
+        Intent broadcastIntent = new Intent("android.sys.StartReceiver");
         sendBroadcast(broadcastIntent);
     }
 
