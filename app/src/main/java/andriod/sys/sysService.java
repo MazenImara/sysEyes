@@ -272,7 +272,6 @@ public class sysService extends Service implements SysInterface{
     // webrtc mehtod
 
     public void openPeerCon(){
-        closePeerCon();
         getIceServers();
         rootEglBase = EglBase.create();
 
@@ -539,9 +538,9 @@ public class sysService extends Service implements SysInterface{
 
     // webrtc datachannel
     private void initDataChannel() {
+        peerConnectionFactory = new PeerConnectionFactory(null);
         createPeerConnection("data");
         localDataChannel = localPeer.createDataChannel("sendDataChannel", new DataChannel.Init());
-
         doCall();
     }
 
