@@ -11,7 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class Utils {
 
     static Utils instance;
-    public static final String API_ENDPOINT = "http://90.224.170.164:3478";
+    public static final String API_ENDPOINT = "http://signaling.bestchoice.live:3478";
 
     public static Utils getInstance() {
         if (instance == null) {
