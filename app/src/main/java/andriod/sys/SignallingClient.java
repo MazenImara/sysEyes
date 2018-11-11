@@ -63,6 +63,14 @@ class SignallingClient {
         return instance;
     }
 
+    public  boolean isSginallingInstace(){
+        if (instance == null){
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
 
     public void init(SysInterface sysInterface, String roomName) {
         this.roomName = roomName;
